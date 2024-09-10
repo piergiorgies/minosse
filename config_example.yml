@@ -1,0 +1,29 @@
+name: Minosse
+key: ApoChair2023!
+problems_path: ./problems
+
+config_check_api: http://localhost:3000/problem_versions
+get_problem_config_api: http://localhost:3000/problems/config/{problem_id}
+
+execution_path: /tmp
+languages:
+  python:
+    extension: .py
+    run_command: "python3 {source_file}"
+  c:
+    extension: .c
+    compile_command: "gcc {source_file} -o {executable}"
+    run_command: "./{executable}"
+  cpp:
+    extension: .cpp
+    compile_command: "g++ {source_file} -o {executable}"
+    run_command: "./{executable}"
+  rust:
+    extension: .rs
+    compile_command: "rustc {source_file}"
+    run_command: "./{executable}"
+  java:
+    source_filename: Main
+    extension: .java
+    compile_command: "javac {source_file}"
+    run_command: "java -Xmx256m {executable}"

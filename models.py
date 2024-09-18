@@ -1,0 +1,7 @@
+EXECUTION_RESULTS = {
+    'ACCEPTED': 1,
+    'TIME_LIMIT': 2,
+    'MEMORY_LIMIT': 3,
+    'WRONG_ANSWER': 4,
+    'COMPILATION_ERROR': 5
+}

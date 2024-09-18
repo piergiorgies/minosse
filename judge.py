@@ -5,29 +5,30 @@ import time
 import yaml
 import threading
 import psutil
+import requests
 
 from config_loader import load_config 
+from models import EXECUTION_RESULTS
 
 config = load_config()
 
 def compile_program(compile_command, source_file, executable):
     EXECUTION_PATH = config["execution_path"]
-    compile_cmd = compile_command.format(source_file=source_file, executable=executable)            
-    # compile_cmd = compilbodye_command.format(source_file=source_file, executable=executable_name)            
+    compile_cmd = compile_command.format(source_file=source_file, executable=executable)         
     compile_process = subprocess.run(compile_cmd, shell=True, capture_output=True, text=True, cwd=EXECUTION_PATH)
     if compile_process.returncode != 0:
-        return {
+        return [{
             'stdout': '',
             'stderr': compile_process.stderr,
             'execution_time': 0,
             'memory_usage': 0,
-            'error': 'Compilation failed'
-        }
+            'result_id': EXECUTION_RESULTS['COMPILATION_ERROR'],
+        }]
     
     return 0
 
 
-def execute_code_locally(code, problem_id, language):
+def execute_code_locally(code, problem_id, language, submission_id):
     problem_config_file = f'problems/{problem_id}/config.yml'
     if not os.path.exists(problem_config_file):
         raise ValueError(f"Unsupported problem_id: {problem_id}")
@@ -54,7 +55,6 @@ def execute_code_locally(code, problem_id, language):
     EXECUTION_PATH = config["execution_path"]
 
     # Create a temporary file for the code
-    # source_file = f'{EXECUTION_PATH}/code{extension}'
     source_file = f'{EXECUTION_PATH}/{source_filename}'
     with open(source_file, 'w') as f:
         f.write(code)
@@ -97,8 +97,8 @@ def execute_code_locally(code, problem_id, language):
         # Run the code with input
         run_cmd = run_command.format(source_file=source_file, executable=executable_name)
 
+        number = 1
         for case_config in problem_config['test_cases']:
-            # case_config = problem_config['test_cases'][test_case['name']]
             inputs = open(f'problems/{problem_id}/{case_config["in"]}').read()
             outputs = open(f'problems/{problem_id}/{case_config["out"]}').read()
 
@@ -118,32 +118,60 @@ def execute_code_locally(code, problem_id, language):
             memory_thread = threading.Thread(target=monitor_memory, args=(ps_process, max_memory,))
             memory_thread.start()
 
+            execution_result = None
             try:
                 stdout, stderr = process.communicate(input=inputs, timeout=time_limit_ms)
                 end_time = time.time()
                 execution_time = end_time - start_time
 
-                error = 'Wrong answer'
+                # error = 'Wrong answer'
+                error = EXECUTION_RESULTS['WRONG_ANSWER']
                 if stdout.strip() == outputs:
-                    error = None
+                    # error = None
+                    error = EXECUTION_RESULTS['ACCEPTED']
                     total_points += case_config['points']
 
-                results.append({
+                execution_result = {
                     'stdout': stdout,
                     'stderr': stderr,
                     'execution_time': execution_time,
                     'memory_usage': max_memory[0] / 1024,
-                    'error': error,
-                })
+                    'result_id': error,
+                }
+                results.append(execution_result)
             except subprocess.TimeoutExpired:
                 process.kill()
-                results.append({
+                execution_result = {
                     'stdout': '',
                     'stderr': 'Process exceeded time limit.',
                     'execution_time': time_limit_ms,
                     'memory_usage': max_memory[0] / 1024,
-                    'error': 'Timeout'
-                })
+                    'result_id': EXECUTION_RESULTS['TIME_LIMIT']
+                }
+                results.append(execution_result)
+
+            data_to_send = {
+                'number': number,
+                'note': execution_result['stderr'],
+                'memory': execution_result['memory_usage'],
+                'time': execution_result['execution_time'],
+                'result_id': execution_result['result_id'],
+            }
+            number += 1
+
+            sent = False
+            api_url = config['get_problem_config_api']
+            api_url = api_url.format(submission_id=submission_id)
+            for _ in range(3):
+                response = requests.post(api_url, json=data_to_send)
+                if response.status_code != 200:
+                    time.sleep(0.2)
+                else:
+                    sent = True
+                    break
+
+            if not sent:
+                print(f'Failed in sending submission {number}')
 
     finally:
         # Cleanup: Remove the temporary source file

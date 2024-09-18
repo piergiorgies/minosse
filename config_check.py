@@ -91,7 +91,12 @@ def update_problem_config(problem_id):
 
 
 def check_config_version():
-    response = requests.get(config['config_check_api'])
+    try:
+        response = requests.get(config['config_check_api'])
+    
+    except Exception as ex:
+        print(f'Error while getting the problems: {ex}')
+        return
 
     if response.status_code != 200:
         print(f'Error while getting problem versions: {response.text}')

@@ -112,6 +112,7 @@ def execute_code_locally(code, problem_id, language, submission_id):
                 text=True,
                 shell=True,
                 cwd=EXECUTION_PATH,
+                user='nonetwork'
             )
             
             ps_process = psutil.Process(process.pid)

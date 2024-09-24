@@ -1,14 +1,30 @@
-FROM alpine:3.20.3
+FROM ubuntu:24.04
 
-RUN apk add --no-cache python3 py3-pip
-RUN apk add --no-cache build-base
-RUN apk add --no-cache gcc
-RUN apk add --no-cache openjdk11
+RUN useradd -m nonetwork
+RUN passwd -d nonetwork
 
-RUN apk add --no-cache curl
+RUN apt update
+RUN apt install -y iptables
+RUN apt install -y python3
+RUN apt install -y python3-pip
+RUN apt install -y python3-venv
+RUN apt install -y build-essential
+RUN apt install -y openjdk-17-jdk
+
+RUN apt install -y curl
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 ENV $PATH="$PATH:$HOME/.cargo/bin"
 
-ARG UNPRIVILEGED_USER=nonetwork
+WORKDIR /app
+COPY . .
+RUN python3 -m venv venv
+RUN /app/venv/bin/pip install -r requirements.txt
 
-RUN adduser -D -H $UNPRIVILEGED_USER
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["/app/venv/bin/python", "/app/main.py"]
+
+# Debugging purposes
+# CMD ["sh", "-c", "while :; do sleep 1; done"]

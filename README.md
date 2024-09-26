@@ -13,26 +13,26 @@ and edit the parameters with the right values. [Here](#configuration-parameters)
 ```yml
 services:
 # The commented part could be deleted (if you don't need RabbitMQ)
-#	rabbitmq:
-#		image: rabbitmq:management
-#		container_name: rabbitmq
-#		environment:
-#			- RABBITMQ_DEFAULT_USER=apo
-#			- RABBITMQ_DEFAULT_PASS=ApoChair2023!
-#		ports:
-#			- "5672:5672"
-#			- "15672:15672" 
-	minosse:
-		container_name: minosse
-		cap_add:
-			- NET_ADMIN
-			- NET_RAW
-		image: byteblitz/minosse
-	command: /app/venv/bin/python -u /app/main.py
+#   rabbitmq:
+#       image: rabbitmq:management
+#       container_name: rabbitmq
+#       environment:
+#           - RABBITMQ_DEFAULT_USER=apo
+#           - RABBITMQ_DEFAULT_PASS=ApoChair2023!
+#       ports:
+#           - "5672:5672"
+#           - "15672:15672" 
+    minosse:
+        container_name: minosse
+        cap_add:
+            - NET_ADMIN
+            - NET_RAW
+        image: byteblitz/minosse
+        command: /app/venv/bin/python -u /app/main.py
 
 networks:
-	default:
-		driver: bridge
+    default:
+        driver: bridge
 ```
 and set the right rabbitmq connection values in the `config.yml` file **before building the image**.
 

@@ -24,7 +24,6 @@ COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
 ENTRYPOINT ["/entrypoint.sh"]
-CMD ["/app/venv/bin/python", "/app/main.py"]
 
 # Debugging purposes
 # CMD ["sh", "-c", "while :; do sleep 1; done"]

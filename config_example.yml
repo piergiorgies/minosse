@@ -1,14 +1,20 @@
+# Judge parameters
 name: Minosse
 key: ApoChair2023!
 problems_path: ./problems
 
+# Server API parameters
 config_check_api: http://localhost:3000/problem_versions
 get_problem_config_api: http://localhost:3000/problems/config/{problem_id}
+send_submission_result_api: http://localhost:3000/submissions/{submission_id}
+send_total_submission_result_api: http://localhost:3000/submissions/{submission_id}/total
 
+# RabbitMQ parameters
 rabbitmq_host: localhost
 rabbitmq_user: apo
 rabbitmq_pass: ApoChair2023!
 
+# Execution parameters
 execution_path: /tmp
 languages:
   python:

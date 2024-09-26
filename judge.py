@@ -112,6 +112,7 @@ def execute_code_locally(code, problem_id, language, submission_id):
                 text=True,
                 shell=True,
                 cwd=EXECUTION_PATH,
+                user='ziocecio'
             )
             
             ps_process = psutil.Process(process.pid)
@@ -160,18 +161,21 @@ def execute_code_locally(code, problem_id, language, submission_id):
             number += 1
 
             sent = False
-            api_url = config['get_problem_config_api']
+            api_url = config['send_total_submission_result_api']
             api_url = api_url.format(submission_id=submission_id)
             for _ in range(3):
-                response = requests.post(api_url, json=data_to_send)
-                if response.status_code != 200:
-                    time.sleep(0.2)
-                else:
-                    sent = True
-                    break
+                try:
+                    response = requests.post(api_url, json=data_to_send)
+                    if response.status_code != 200:
+                        time.sleep(0.2)
+                    else:
+                        sent = True
+                        break
+                except Exception:
+                    pass
 
             if not sent:
-                print(f'Failed in sending submission {number}')
+                print(f'Failed in sending submission {submission_id}')
 
     finally:
         # Cleanup: Remove the temporary source file

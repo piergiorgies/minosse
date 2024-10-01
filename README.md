@@ -7,7 +7,7 @@ This section is intended for the users who only want to deploy a production inst
     ```shell
     cp config_example.yml config.yml
     ```
-and edit the parameters with the right values. [Here](#configuration-parameters) there's a description of each parameter.
+    and edit the parameters with the right values. [Here](#configuration-parameters) there's a description of each parameter.
 2. Build the docker image with
     ```shell
     docker build -t byteblitz/minosse .

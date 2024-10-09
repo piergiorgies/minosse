@@ -1,6 +1,5 @@
 import asyncio
 import aio_pika
-import pika
 import json
 import requests
 import time

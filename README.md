@@ -13,18 +13,18 @@ The results of the submission are sent back with different messages: one for eac
 ### Single case message
 ```json
 {
-    "number": <test_case_number>,
+    "number": "<test_case_number>",
     "note": "Compilation/execution errors",
-    "memory": <memory_usage>,
-    "time": <execution_time>,
-    "result_id": <result_id>
+    "memory": "<memory_usage>",
+    "time": "<execution_time>",
+    "result_id": "<result_id>"
 }
 ```
 
 ### Submission summary
 ```json
 {
-    "result_id": <result_id>
+    "result_id": "<result_id>"
 }
 ```
 

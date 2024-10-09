@@ -2,47 +2,23 @@ import requests
 import os
 import yaml
 
-from config_loader import load_config
+from src.config_loader import load_config
+from src.util import get_auth_headers
 
 config = load_config()
 problem_versions = {}
+endpoint_timeout = 1
 
 def update_problem_config(problem_id):
     api_url = config['get_problem_config_api']
-    api_url = api_url.format(problem_id=problem_id)
-
-    # Credentials to authenticate to the server
-    # We need them to prvent user accessing the test case instances
-    body = { 'name': config['name'], 'key': config['key'] }
-    response = requests.post(api_url, json=body)
+    api_url = api_url.format(problem_id=problem_id)   
+    
+    response = requests.post(api_url, headers=get_auth_headers(), timeout=endpoint_timeout)
 
     if response.status_code != 200:
         print(f'Error while getting problem configuration: {response.text}')
 
     try:
-        # response body:
-        # { 
-        #   "problem_id": id, 
-        #   "problem_version": version,
-        #   "languages": {
-        #       "language_id": {
-        #           "memory_limit": ...,
-        #           "time_limit": ...
-        #       },
-        #       ...
-        #   }
-        #   "test_cases": [
-        #       { 
-        #           "name": case_name, 
-        #           "number": case_number, 
-        #           "points": case_points,
-        #           "is_pretest": True/False
-        #           "input": ..., 
-        #           "output": ... 
-        #       },
-        #       ...
-        #   ] 
-        # }
         problem_config = response.json()
 
         problem_config_path = f'problems/{problem_id}'
@@ -53,8 +29,8 @@ def update_problem_config(problem_id):
         # to be retrieved during the judging process
         test_cases = {}
         for test_case_info in problem_config['test_cases']:
-            in_file_name = f'{test_case_info["case_name"]}.in'
-            out_file_name = f'{test_case_info["case_name"]}.out'
+            in_file_name = f'{test_case_info["number"]}.in'
+            out_file_name = f'{test_case_info["number"]}.out'
 
             # Write the input test cases
             with open(f'{problem_config_path}/{in_file_name}', 'w') as input_file:
@@ -64,7 +40,7 @@ def update_problem_config(problem_id):
             with open(f'{problem_config_path}/{out_file_name}', 'w') as output_file:
                 output_file.write(test_case_info['output'])
 
-            test_cases[test_case_info['case_name']] = {
+            test_cases[test_case_info['number']] = {
                 'in': in_file_name,
                 'out': out_file_name,
                 'number': test_case_info['number'],
@@ -74,8 +50,8 @@ def update_problem_config(problem_id):
 
         with open(f'{problem_config_path}/config.yml', 'w') as config_file:
             data = { 
-                'version': problem_config['problem_version'], 
-                'languages': problem_config['languages'],
+                'version': problem_config['config_version_number'], 
+                'languages': problem_config['constraints'],
                 'test_cases_number': len(problem_config['test_cases']),
                 'test_cases': test_cases,
             }
@@ -92,7 +68,7 @@ def update_problem_config(problem_id):
 
 def check_config_version():
     try:
-        response = requests.get(config['config_check_api'])
+        response = requests.get(config['config_check_api'], headers=get_auth_headers(), timeout=endpoint_timeout)
     
     except Exception as ex:
         print(f'Error while getting the problems: {ex}')

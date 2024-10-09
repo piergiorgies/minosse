@@ -39,7 +39,8 @@ def execute_code_locally(code, problem_id, language, submission_id):
 
     problem_config_file = open(problem_config_file)
     problem_config = yaml.safe_load(problem_config_file.read())
-    if language not in problem_config['languages']:
+    languages_ids = list(map(lambda x: x['language_id'], problem_config['languages']))
+    if language not in languages_ids:
         raise ValueError(f"Unsupported language: {language}")
 
     # Check the config for program_id
@@ -63,8 +64,11 @@ def execute_code_locally(code, problem_id, language, submission_id):
     executable = source_file.replace(extension, '')
     executable_name = executable.split('/').pop()
     
-    time_limit_ms = problem_config['languages'][language]['time_limit']
-    memory_limit_mb = problem_config['languages'][language]['memory_limit']
+    problem_language_config = [l for l in problem_config['languages'] if l['language_id'] == language][0]
+    # time_limit_ms = problem_config['languages'][language]['time_limit']
+    time_limit_ms = problem_language_config['time_limit']
+    # memory_limit_mb = problem_config['languages'][language]['memory_limit']
+    memory_limit_mb = problem_language_config['memory_limit']
 
     max_memory = [0]
     def monitor_memory(proc, max_memory):
@@ -100,6 +104,7 @@ def execute_code_locally(code, problem_id, language, submission_id):
 
         number = 1
         for case_config in problem_config['test_cases']:
+            case_config = problem_config['test_cases'][case_config]
             inputs = open(f'problems/{problem_id}/{case_config["in"]}').read()
             outputs = open(f'problems/{problem_id}/{case_config["out"]}').read()
 
@@ -154,7 +159,7 @@ def execute_code_locally(code, problem_id, language, submission_id):
 
             data_to_send = {
                 'number': number,
-                'note': execution_result['stderr'],
+                'notes': execution_result['stderr'],
                 'memory': execution_result['memory_usage'],
                 'time': execution_result['execution_time'],
                 'result_id': execution_result['result_id'],
@@ -162,7 +167,7 @@ def execute_code_locally(code, problem_id, language, submission_id):
             number += 1
 
             sent = False
-            api_url = config['send_total_submission_result_api']
+            api_url = config['send_submission_result_api']
             api_url = api_url.format(submission_id=submission_id)
             for _ in range(3):
                 try:

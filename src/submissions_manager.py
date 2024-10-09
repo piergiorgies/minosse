@@ -4,8 +4,9 @@ import json
 import requests
 import time
 
-from judge import execute_code_locally
-from config_loader import load_config
+from src.judge import execute_code_locally
+from src.config_loader import load_config
+from src.util import get_auth_headers
 
 config = load_config()
 
@@ -38,7 +39,7 @@ async def callback(message: aio_pika.IncomingMessage):
             api_url = api_url.format(submission_id=data['submission_id'])
             for _ in range(3):
                 try:
-                    response = requests.post(api_url, json={'result_id': submission_result})
+                    response = requests.post(api_url, json={'result_id': submission_result}, headers=get_auth_headers())
                     if response.status_code != 200:
                         time.sleep(0.2)
                     else:

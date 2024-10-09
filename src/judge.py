@@ -7,8 +7,9 @@ import threading
 import psutil
 import requests
 
-from config_loader import load_config 
-from models import EXECUTION_RESULTS
+from src.config_loader import load_config 
+from src.models import EXECUTION_RESULTS
+from src.util import get_auth_headers
 
 config = load_config()
 
@@ -165,7 +166,7 @@ def execute_code_locally(code, problem_id, language, submission_id):
             api_url = api_url.format(submission_id=submission_id)
             for _ in range(3):
                 try:
-                    response = requests.post(api_url, json=data_to_send)
+                    response = requests.post(api_url, json=data_to_send, headers=get_auth_headers())
                     if response.status_code != 200:
                         time.sleep(0.2)
                     else:

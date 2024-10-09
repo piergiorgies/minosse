@@ -2,8 +2,8 @@ import asyncio
 import schedule
 import time
 
-from config_check import check_config_version
-from submissions_manager import start_listen_for_submissions
+from src.config_check import check_config_version
+from src.submissions_manager import start_listen_for_submissions
 
 # if __name__ == "__main__":
 #     # code = "#include <stdio.h>\nint main() { char input[100]; scanf(\"%99s\", input); printf(\"%s\\n\", input); return 0; }"

@@ -37,3 +37,7 @@ languages:
     extension: .java
     compile_command: "javac {source_file}"
     run_command: "java -Xmx256m {executable}"
+
+loki_url: http://localhost:3100/loki/api/v1/push
+log_level: INFO
+console_log: True

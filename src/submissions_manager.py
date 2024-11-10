@@ -15,34 +15,34 @@ logger = get_logger()
 async def callback(message: aio_pika.IncomingMessage):
     async with message.process():
         try:
-            data = json.loads(message.body.decode())
-            logger.info(f"Received submission: {data}")
-            if 'code' not in data:
-                logger.error('code not specified')
-                # print('code not specified')
+            data = json.loads(json.loads(message.body.decode()))
+            
+            if 'submitted_code' not in data:
+                logger.error('submitted_code not specified')
+                # print('submitted_code not specified')
                 return
             if 'problem_id' not in data:
                 logger.error('problem_id not specified')
                 # print('problem_id not specified')
                 return
-            if 'language' not in data:
-                logger.error('language not specified')
-                # print('language not specified')
+            if 'language_id' not in data:
+                logger.error('language_id not specified')
+                # print('language_id not specified')
                 return
 
-            if 'submission_id' not in data:
-                logger.error('submission_id not specified')
-                # print('submission_id not specified')
+            if 'id' not in data:
+                logger.error('id not specified')
+                # print('id not specified')
                 return
 
-            execution_result = execute_code_locally(data['code'], data['problem_id'], data['language'], data['submission_id'])
+            execution_result = execute_code_locally(data['submitted_code'], data['problem_id'], data['language_id'], data['id'])
             submission_result = 0
             for result in execution_result['results']:
                 submission_result = max(submission_result, result['result_id'])
 
             sent = False
             api_url = config['send_total_submission_result_api']
-            api_url = api_url.format(submission_id=data['submission_id'])
+            api_url = api_url.format(submission_id=data['id'])
             for _ in range(3):
                 try:
                     response = requests.post(api_url, json={'result_id': submission_result}, headers=get_auth_headers())

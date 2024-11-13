@@ -15,9 +15,9 @@ logger = get_logger()
 async def callback(message: aio_pika.IncomingMessage):
     async with message.process():
         try:
-            data = json.loads(json.loads(message.body.decode()))
+            data = json.loads(message.body.decode())
             
-            if 'submitted_code' not in data:
+            if 'code' not in data:
                 logger.error('submitted_code not specified')
                 # print('submitted_code not specified')
                 return
@@ -25,24 +25,23 @@ async def callback(message: aio_pika.IncomingMessage):
                 logger.error('problem_id not specified')
                 # print('problem_id not specified')
                 return
-            if 'language_id' not in data:
+            if 'language' not in data:
                 logger.error('language_id not specified')
                 # print('language_id not specified')
                 return
-
-            if 'id' not in data:
+            if 'submission_id' not in data:
                 logger.error('id not specified')
                 # print('id not specified')
                 return
 
-            execution_result = execute_code_locally(data['submitted_code'], data['problem_id'], data['language_id'], data['id'])
+            execution_result = execute_code_locally(data['code'], data['problem_id'], data['language'], data['submission_id'])
             submission_result = 0
             for result in execution_result['results']:
                 submission_result = max(submission_result, result['result_id'])
 
             sent = False
             api_url = config['send_total_submission_result_api']
-            api_url = api_url.format(submission_id=data['id'])
+            api_url = api_url.format(submission_id=data['submission_id'])
             for _ in range(3):
                 try:
                     response = requests.post(api_url, json={'result_id': submission_result}, headers=get_auth_headers())
@@ -55,8 +54,7 @@ async def callback(message: aio_pika.IncomingMessage):
                     pass
 
             if not sent:
-                logger.error(f'Failed in sending submission {data["submission_id"]}')
-                # print(f'Failed in sending submission {data['submission_id']}')
+                logger.error(f'Failed in sending submission total {data["submission_id"]}')
 
         except Exception as e:
             logger.error(f'Error while processing submission: {e}')

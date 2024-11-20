@@ -39,8 +39,8 @@ def execute_code_locally(code, problem_id, language, submission_id):
 
     problem_config_file = open(problem_config_file)
     problem_config = yaml.safe_load(problem_config_file.read())
-    languages_ids = list(map(lambda x: x['language_id'], problem_config['languages']))
-    if language not in languages_ids:
+    languages_names = list(map(lambda x: x['language_name'], problem_config['languages']))
+    if language not in languages_names:
         raise ValueError(f"Unsupported language: {language}")
 
     # Check the config for program_id
@@ -64,7 +64,7 @@ def execute_code_locally(code, problem_id, language, submission_id):
     executable = source_file.replace(extension, '')
     executable_name = executable.split('/').pop()
     
-    problem_language_config = [l for l in problem_config['languages'] if l['language_id'] == language][0]
+    problem_language_config = [l for l in problem_config['languages'] if l['language_name'] == language][0]
     # time_limit_ms = problem_config['languages'][language]['time_limit']
     time_limit_ms = problem_language_config['time_limit']
     # memory_limit_mb = problem_config['languages'][language]['memory_limit']

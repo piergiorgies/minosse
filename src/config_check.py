@@ -4,7 +4,9 @@ import yaml
 
 from src.config_loader import load_config
 from src.util import get_auth_headers
+from src.logger import get_logger
 
+logger = get_logger()
 config = load_config()
 problem_versions = {}
 endpoint_timeout = 1
@@ -16,7 +18,8 @@ def update_problem_config(problem_id):
     response = requests.post(api_url, headers=get_auth_headers(), timeout=endpoint_timeout)
 
     if response.status_code != 200:
-        print(f'Error while getting problem configuration: {response.text}')
+        logger.error(f'Error while getting problem configuration: {response.text}')
+        # print(f'Error while getting problem configuration: {response.text}')
 
     try:
         problem_config = response.json()
@@ -63,7 +66,8 @@ def update_problem_config(problem_id):
         # - 2 files for each test case: one for the inputs and one for the outputs
 
     except Exception as e:
-        print(f'Error while deserializing server response: {e}')
+        logger.error(f'Error while deserializing server response: {e}')
+        # print(f'Error while deserializing server response: {e}')
 
 
 def check_config_version():
@@ -71,11 +75,13 @@ def check_config_version():
         response = requests.get(config['config_check_api'], headers=get_auth_headers(), timeout=endpoint_timeout)
     
     except Exception as ex:
-        print(f'Error while getting the problems: {ex}')
+        logger.error(f'Error while getting the problems: {ex}')
+        # print(f'Error while getting the problems: {ex}')
         return
 
     if response.status_code != 200:
-        print(f'Error while getting problem versions: {response.text}')
+        logger.error(f'Error while getting problem versions: {response.text}')
+        # print(f'Error while getting problem versions: {response.text}')
         return
     
     try:
@@ -88,5 +94,6 @@ def check_config_version():
                 problem_versions[problem_id] = server_versions[problem_id]
 
     except Exception as e:
-        print(f'Error while deserializing server response: {e}')
+        logger.error(f'Error while deserializing server response: {e}')
+        # print(f'Error while deserializing server response: {e}')
         return

@@ -19,6 +19,7 @@ def update_problem_config(problem_id):
 
     if response.status_code != 200:
         logger.error(f'Error while getting problem configuration: {response.text}')
+        return False
         # print(f'Error while getting problem configuration: {response.text}')
 
     try:
@@ -68,12 +69,15 @@ def update_problem_config(problem_id):
     except Exception as e:
         logger.error(f'Error while deserializing server response: {e}')
         # print(f'Error while deserializing server response: {e}')
+        return False
+
+    return True
 
 
 def check_config_version():
     try:
         response = requests.get(config['config_check_api'], headers=get_auth_headers(), timeout=endpoint_timeout)
-    
+
     except Exception as ex:
         logger.error(f'Error while getting the problems: {ex}')
         # print(f'Error while getting the problems: {ex}')
@@ -81,7 +85,7 @@ def check_config_version():
 
     if response.status_code != 200:
         logger.error(f'Error while getting problem versions: {response.text}')
-        # print(f'Error while getting problem versions: {response.text}')
+        # print(f'Error whi le getting problem versions: {response.text}')
         return
     
     try:
@@ -90,8 +94,9 @@ def check_config_version():
         server_versions = response.json()
         for problem_id in server_versions:
             if problem_id not in problem_versions or problem_versions[problem_id] != server_versions[problem_id]:
-                update_problem_config(problem_id)
-                problem_versions[problem_id] = server_versions[problem_id]
+                success = update_problem_config(problem_id)
+                if success: 
+                    problem_versions[problem_id] = server_versions[problem_id]
 
     except Exception as e:
         logger.error(f'Error while deserializing server response: {e}')

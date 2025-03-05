@@ -27,7 +27,7 @@ async def run_scheduler():
 
 async def main():
     # Schedule the config version checker
-    schedule.every(15).minutes.do(check_config_version)
+    schedule.every(30).seconds.do(check_config_version)
 
     # Run both the scheduler and submission listener concurrently
     await asyncio.gather(

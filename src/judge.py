@@ -18,13 +18,15 @@ def compile_program(compile_command, source_file, executable):
     compile_cmd = compile_command.format(source_file=source_file, executable=executable)         
     compile_process = subprocess.run(compile_cmd, shell=True, capture_output=True, text=True, cwd=EXECUTION_PATH)
     if compile_process.returncode != 0:
-        return [{
-            'stdout': '',
-            'stderr': compile_process.stderr,
-            'execution_time': 0,
-            'memory_usage': 0,
-            'result_id': EXECUTION_RESULTS['COMPILATION_ERROR'],
-        }]
+        return {
+            'results': [{
+                'stdout': '',
+                'stderr': compile_process.stderr,
+                'execution_time': 0,
+                'memory_usage': 0,
+                'result_id': EXECUTION_RESULTS['COMPILATION_ERROR'],
+            }]
+        }
     
     return 0
 
@@ -39,9 +41,9 @@ def execute_code_locally(code, problem_id, language, submission_id):
 
     problem_config_file = open(problem_config_file)
     problem_config = yaml.safe_load(problem_config_file.read())
-    languages_names = list(map(lambda x: x['language_name'], problem_config['languages']))
-    if language not in languages_names:
-        raise ValueError(f"Unsupported language: {language}")
+    # languages_names = list(map(lambda x: x['language_id'], problem_config['languages']))
+    # if language not in languages_names:
+    #     raise ValueError(f"Unsupported language: {language}")
 
     # Check the config for program_id
     # Maybe you can do only one check and save if it is good or bad    

@@ -14,6 +14,8 @@ logger = get_logger()
 
 async def callback(message: aio_pika.IncomingMessage):
     async with message.process():
+        logger.info('Submission received')
+
         try:
             data = json.loads(message.body.decode())
             

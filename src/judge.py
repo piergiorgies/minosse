@@ -5,11 +5,10 @@ import time
 import yaml
 import threading
 import psutil
-import requests
 
 from src.config_loader import load_config 
 from src.models import EXECUTION_RESULTS
-from src.util import get_auth_headers
+from src.util import send_partial_result
 
 config = load_config()
 
@@ -91,6 +90,13 @@ def execute_code_locally(code, problem_id, language, submission_id):
             # If compilation result isn't zero, is an object which report
             # the compilation errors...
             if compilation_result != 0:
+                send_partial_result(submission_id, {
+                    'number': 0,
+                    'notes': compilation_result['results'][0]['stderr'],
+                    'memory': compilation_result['results'][0]['memory_usage'],
+                    'time': compilation_result['results'][0]['execution_time'],
+                    'result_id': compilation_result['results'][0]['result_id'],
+                })
                 return compilation_result
 
 
@@ -129,7 +135,7 @@ def execute_code_locally(code, problem_id, language, submission_id):
 
             execution_result = None
             try:
-                stdout, stderr = process.communicate(input=inputs, timeout=time_limit_ms)
+                stdout, stderr = process.communicate(input=inputs, timeout=time_limit_ms / 1000)
                 end_time = time.time()
                 execution_time = end_time - start_time
 
@@ -153,7 +159,7 @@ def execute_code_locally(code, problem_id, language, submission_id):
                 execution_result = {
                     'stdout': '',
                     'stderr': 'Process exceeded time limit.',
-                    'execution_time': time_limit_ms,
+                    'execution_time': time_limit_ms / 1000,
                     'memory_usage': max_memory[0] / 1024,
                     'result_id': EXECUTION_RESULTS['TIME_LIMIT']
                 }
@@ -168,22 +174,7 @@ def execute_code_locally(code, problem_id, language, submission_id):
             }
             number += 1
 
-            sent = False
-            api_url = config['send_submission_result_api']
-            api_url = api_url.format(submission_id=submission_id)
-            for _ in range(3):
-                try:
-                    response = requests.post(api_url, json=data_to_send, headers=get_auth_headers())
-                    if response.status_code != 200:
-                        time.sleep(0.2)
-                    else:
-                        sent = True
-                        break
-                except Exception:
-                    pass
-
-            if not sent:
-                print(f'Failed in sending submission {submission_id}')
+            send_partial_result(submission_id, data_to_send)
 
     finally:
         # Cleanup: Remove the temporary source file

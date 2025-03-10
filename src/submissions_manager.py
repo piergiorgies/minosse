@@ -4,7 +4,7 @@ import json
 import requests
 import time
 
-from src.judge import execute_code_locally
+from src.judge import execute_code_locally, execute_public_test_cases
 from src.config_loader import load_config
 from src.util import get_auth_headers
 from src.logger import get_logger
@@ -36,7 +36,10 @@ async def callback(message: aio_pika.IncomingMessage):
                 # print('id not specified')
                 return
 
-            execution_result = execute_code_locally(data['code'], data['problem_id'], data['language'], data['submission_id'])
+            if 'is_pretest_run' in data and data['is_pretest_run']:
+                execution_result = execute_public_test_cases(data['code'], data['problem_id'], data['language'], data['submission_id'])
+            else:
+                execution_result = execute_code_locally(data['code'], data['problem_id'], data['language'], data['submission_id'])
             submission_result = 0
             for result in execution_result['results']:
                 submission_result = max(submission_result, result['result_id'])

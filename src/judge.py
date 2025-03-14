@@ -162,6 +162,8 @@ def execute_code_locally(code, problem_id, language, submission_id, is_pretest_r
                 'memory': execution_result['memory_usage'],
                 'time': execution_result['execution_time'],
                 'result_id': execution_result['result_id'],
+                'is_pretest_run': is_pretest_run,
+                'output': execution_result['stdout'] if is_pretest_run else None,
             }
 
             send_partial_result(submission_id, data_to_send)

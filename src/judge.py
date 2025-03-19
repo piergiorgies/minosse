@@ -7,7 +7,7 @@ import threading
 import psutil
 
 from src.config_loader import load_config 
-from src.models import EXECUTION_RESULTS
+from src.models import EXECUTION_RESULTS, CompilationError
 from src.util import send_partial_result
 
 config = load_config()
@@ -17,20 +17,12 @@ def compile_program(compile_command, source_file, executable):
     compile_cmd = compile_command.format(source_file=source_file, executable=executable)         
     compile_process = subprocess.run(compile_cmd, shell=True, capture_output=True, text=True, cwd=EXECUTION_PATH)
     if compile_process.returncode != 0:
-        return {
-            'results': [{
-                'stdout': '',
-                'stderr': compile_process.stderr,
-                'execution_time': 0,
-                'memory_usage': 0,
-                'result_id': EXECUTION_RESULTS['COMPILATION_ERROR'],
-            }]
-        }
+        raise CompilationError(compile_process.stderr)
     
     return 0
 
 
-def execute_code_locally(code, problem_id, language, submission_id):
+def execute_code_locally(code, problem_id, language, submission_id, is_pretest_run):
     problem_config_file = f'problems/{problem_id}/config.yml'
     if not os.path.exists(problem_config_file):
         raise ValueError(f"Unsupported problem_id: {problem_id}")
@@ -45,7 +37,7 @@ def execute_code_locally(code, problem_id, language, submission_id):
     #     raise ValueError(f"Unsupported language: {language}")
 
     # Check the config for program_id
-    # Maybe you can do only one check and save if it is good or bad    
+    # Maybe you can do only one check and save if it is good or bad
 
     lang_config = config['languages'][language]
     extension = lang_config['extension']
@@ -66,9 +58,8 @@ def execute_code_locally(code, problem_id, language, submission_id):
     executable_name = executable.split('/').pop()
     
     problem_language_config = [l for l in problem_config['languages'] if l['language_name'] == language][0]
-    # time_limit_ms = problem_config['languages'][language]['time_limit']
+
     time_limit_ms = problem_language_config['time_limit']
-    # memory_limit_mb = problem_config['languages'][language]['memory_limit']
     memory_limit_mb = problem_language_config['memory_limit']
 
     max_memory = [0]
@@ -86,19 +77,10 @@ def execute_code_locally(code, problem_id, language, submission_id):
     try:
         # Compile the code if necessary
         if compile_command:
-            compilation_result = compile_program(compile_command, source_file, executable)
-            # If compilation result isn't zero, is an object which report
-            # the compilation errors...
-            if compilation_result != 0:
-                send_partial_result(submission_id, {
-                    'number': 0,
-                    'notes': compilation_result['results'][0]['stderr'],
-                    'memory': compilation_result['results'][0]['memory_usage'],
-                    'time': compilation_result['results'][0]['execution_time'],
-                    'result_id': compilation_result['results'][0]['result_id'],
-                })
-                return compilation_result
-
+            try:
+                compile_program(compile_command, source_file, executable)
+            except CompilationError as e:
+                raise e
 
         # Set resource limits
         def set_limits():
@@ -110,9 +92,18 @@ def execute_code_locally(code, problem_id, language, submission_id):
         # Run the code with input
         run_cmd = run_command.format(source_file=source_file, executable=executable_name)
 
-        number = 1
-        for case_config in problem_config['test_cases']:
-            case_config = problem_config['test_cases'][case_config]
+        # Run the code for each test case (if is_pretest_run is True, only run pretest cases)
+        test_cases = []
+        if is_pretest_run:
+            for case in problem_config['test_cases']:
+                if problem_config['test_cases'][case]['is_pretest']:
+                    test_cases.append(case)
+        else:
+            test_cases = problem_config['test_cases']
+
+        for case_config in test_cases:
+            number = case_config
+            case_config = problem_config['test_cases'][number]
             inputs = open(f'problems/{problem_id}/{case_config["in"]}').read()
             outputs = open(f'problems/{problem_id}/{case_config["out"]}').read()
 
@@ -126,7 +117,7 @@ def execute_code_locally(code, problem_id, language, submission_id):
                 text=True,
                 shell=True,
                 cwd=EXECUTION_PATH,
-                user='ziocecio'
+                user='alessandro'
             )
             
             ps_process = psutil.Process(process.pid)
@@ -171,8 +162,9 @@ def execute_code_locally(code, problem_id, language, submission_id):
                 'memory': execution_result['memory_usage'],
                 'time': execution_result['execution_time'],
                 'result_id': execution_result['result_id'],
+                'is_pretest_run': is_pretest_run,
+                'output': execution_result['stdout'] if is_pretest_run else None,
             }
-            number += 1
 
             send_partial_result(submission_id, data_to_send)
 

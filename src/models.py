@@ -5,3 +5,11 @@ EXECUTION_RESULTS = {
     'MEMORY_LIMIT': 4,
     'COMPILATION_ERROR': 5
 }
+
+class CompilationError(Exception):
+    
+    stderr: str = None
+
+    def __init__(self, stderr, *args):
+        super().__init__(*args)
+        self.stderr = stderr

@@ -8,16 +8,20 @@ services:
     ports:
       - "5672:5672"
       - "15672:15672"
+    networks:
+      - byteblitz
 
-  # minosse:
-  #   container_name: minosse
-  #   cap_add:
-  #       - NET_ADMIN
-  #       - NET_RAW
-  #   image: byteblitz/minosse
-  #   command: /app/venv/bin/python -u /app/main.py
+  minosse:
+    container_name: minosse
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    image: byteblitz/minosse
+    command: /app/venv/bin/python -u /app/main.py
+    networks:
+      - byteblitz
 
 networks:
-  backend:
+  byteblitz:
   bridge:
     driver: bridge

@@ -10,7 +10,7 @@ send_submission_result_api: http://localhost:3000/submissions/{submission_id}
 send_total_submission_result_api: http://localhost:3000/submissions/{submission_id}/total
 
 # RabbitMQ parameters
-rabbitmq_host: localhost
+rabbitmq_host: rabbitmq
 rabbitmq_user: apo
 rabbitmq_pass: ApoChair2023!
 
@@ -38,6 +38,6 @@ languages:
     compile_command: "javac {source_file}"
     run_command: "java -Xmx256m {executable}"
 
-loki_url: http://localhost:3100/loki/api/v1/push
+loki_url: http://loki:3100/loki/api/v1/push
 log_level: INFO
 console_log: True

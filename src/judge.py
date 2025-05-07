@@ -48,6 +48,7 @@ def execute_code_locally(code, problem_id, language, submission_id, is_pretest_r
     source_filename = f'{source_filename if source_filename else 'code'}{extension}'
 
     EXECUTION_PATH = config["execution_path"]
+    EXECUTION_USER = config["execution_user"]
 
     # Create a temporary file for the code
     source_file = f'{EXECUTION_PATH}/{source_filename}'
@@ -117,7 +118,7 @@ def execute_code_locally(code, problem_id, language, submission_id, is_pretest_r
                 text=True,
                 shell=True,
                 cwd=EXECUTION_PATH,
-                user='alessandro'
+                user=EXECUTION_USER
             )
             
             ps_process = psutil.Process(process.pid)

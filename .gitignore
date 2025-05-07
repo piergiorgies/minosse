@@ -2,5 +2,8 @@
 problems/*
 __pycache__
 config.yml
+config1.yml
+config2.yml
+config3.yml
 test_*
 docker-compose-*

@@ -6,8 +6,8 @@ import requests
 config = load_config()
 
 def get_auth_headers():
-    name = config['name']
-    key = config['key']
+    name = config.name
+    key = config.key
     hashed = hashlib.sha256(f'{name}:{key}'.encode()).hexdigest()
     #return the hash as a header
     return {

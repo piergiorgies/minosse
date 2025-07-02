@@ -2,6 +2,7 @@
 problems/*
 __pycache__
 config.yml
+config.bak.yml
 config1.yml
 config2.yml
 config3.yml

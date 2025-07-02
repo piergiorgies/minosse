@@ -8,7 +8,8 @@ from src.judge import execute_code_locally
 from src.config_loader import load_config
 from src.util import get_auth_headers
 from src.logger import get_logger
-from src.models import CompilationError, EXECUTION_RESULTS
+from src.models.submission_dto import SubmissionDTO
+from src.models.errors import CompilationError, EXECUTION_RESULTS
 
 config = load_config()
 logger = get_logger()
@@ -18,25 +19,33 @@ async def callback(message: aio_pika.IncomingMessage):
         logger.info('Submission received')
 
         try:
-            data = json.loads(message.body.decode())
+            # data = json.loads(message.body.decode())
             
-            if 'code' not in data:
-                logger.error('submitted_code not specified')
-                return
-            if 'problem_id' not in data:
-                logger.error('problem_id not specified')
-                return
-            if 'language' not in data:
-                logger.error('language_id not specified')
-                return
-            if 'submission_id' not in data:
-                logger.error('id not specified')
+            # if 'code' not in data:
+            #     logger.error('submitted_code not specified')
+            #     return
+            # if 'problem_id' not in data:
+            #     logger.error('problem_id not specified')
+            #     return
+            # if 'language' not in data:
+            #     logger.error('language_id not specified')
+            #     return
+            # if 'submission_id' not in data:
+            #     logger.error('id not specified')
+            #     return
+            try:
+                body = json.loads(message.body.decode())
+                submission_dto = SubmissionDTO(**body)
+            except Exception as e:
+                print(f'Error while parsing the submission data: {e}')
                 return
 
-            is_pretest_run = 'is_pretest_run' in data and data['is_pretest_run']
+            # is_pretest_run = 'is_pretest_run' in data and data['is_pretest_run']
+            is_pretest_run = submission_dto.is_pretest_run
             
             try:
-                execution_result = execute_code_locally(data['code'], data['problem_id'], data['language'], data['submission_id'], is_pretest_run)
+                # execution_result = execute_code_locally(data['code'], data['problem_id'], data['language'], data['submission_id'], is_pretest_run)
+                execution_result = execute_code_locally(submission_dto)
                 submission_result = 0
 
                 for result in execution_result['results']:
@@ -74,7 +83,11 @@ async def start_listen_for_submissions():
         try:
             # Attempt to connect to RabbitMQ
             logger.info("Trying to connect to RabbitMQ...")
-            connection = await aio_pika.connect_robust(f'amqp://{config['rabbitmq_user']}:{config['rabbitmq_pass']}@{config['rabbitmq_host']}/')
+
+            rabbitmq_host = config.rabbitmq_host
+            rabbitmq_user = config.rabbitmq_user
+            rabbitmq_pass = config.rabbitmq_pass
+            connection = await aio_pika.connect_robust(f'amqp://{rabbitmq_user}:{rabbitmq_pass}@{rabbitmq_host}/')
             
             # If connection is successful, proceed
             async with connection:

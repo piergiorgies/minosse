@@ -8,10 +8,10 @@ config = load_config()
 
 class LokiLogger:
     def __init__(self):
-        self.name = config['name']
-        self.url = config['loki_url']
-        self.level = config['log_level']
-        self.CONSOLE_LOG = config['console_log']
+        self.name = config.name
+        self.url = config.loki_url
+        self.level = config.log_level
+        self.CONSOLE_LOG = config.console_log
         self._configure_logging()
 
     def _configure_logging(self):
